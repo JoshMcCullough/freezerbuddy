@@ -8,44 +8,54 @@ const uint8_t DISP_DIO_PIN = 4;
 const uint8_t DISP_PIN_CLK = 5;
 const uint8_t TEMP_PIN = 10;
 
-const uint8_t DISP_BRIGHTNESS = 2;
 const uint16_t DISP_INTERVAL_MS = 2000;
-const uint16_t FADE_IN_MS = 500;
-const uint16_t FADE_OUT_MS = 800;
+const uint16_t FADE_IN_MS = 1000;
+const uint16_t FADE_OUT_MS = 500;
+const uint16_t ANIM_DELAY_MS = 2000;
 const TM1637Display disp = TM1637Display(DISP_PIN_CLK, DISP_DIO_PIN);
 const DHT_Unified sensor(TEMP_PIN, DHT22);
 
-uint16_t tempDelayMS = 2000;
+uint16_t tempDelayMS = 30000;
 
 void setup() {
   Serial.begin(9600);
   
-  disp.setBrightness(0);
-
-  sensor.begin();
-
-  initSensorDelay();
+  initSensor();
+  initDisplay();
 }
 
-void initSensorDelay() {
+void initSensor() {
   const sensor_t sensorInfo;
 
+  sensor.begin();
   sensor.temperature().getSensor(&sensorInfo);
   tempDelayMS = max(tempDelayMS, sensorInfo.min_delay / 1000);
 }
 
+void initDisplay() {
+  uint8_t segments[4];
+  
+  for (uint8_t i = 0; i < 4; i++) {
+    segments[i] = SYM_DASH;
+  }
+  
+  disp.setBrightness(DISP_BRIGHT_MIN);
+  fadeIn(segments, 1000);
+}
+
 void loop() {
-  if (tempDelayMS != NULL) {
-    const int8_t tempC = readTemp();
-    
-    if (tempC != NULL) {
-      displayTempC(tempC);
-      displayTempF(tempC);
-    }
+  const int8_t tempC = readTemp();
+  
+  if (tempC != NULL) {
+    displayTempC(tempC);
+    displayTempF(tempC);
   }
 
-  disp.setBrightness(DISP_BRIGHT_0);
-  animateLoopClockwise(&disp, tempDelayMS, 2);
+  disp.setBrightness(DISP_BRIGHT_MIN);
+
+  for (uint8_t i = 0; i < tempDelayMS / ANIM_DELAY_MS; i++) {
+    animateLoopClockwise(&disp, ANIM_DELAY_MS);
+  }
 }
 
 int8_t readTemp() {
@@ -107,7 +117,6 @@ void displayTemp(const int8_t temp, const uint8_t unit) {
     fadeIn(segments, FADE_IN_MS);
     delay(DISP_INTERVAL_MS);
     fadeOut(segments, FADE_OUT_MS);
-    delay(DISP_INTERVAL_MS);
 }
 
 void fadeIn(const uint8_t segments[], const uint16_t timeMS) {

@@ -56,4 +56,4 @@ const uint8_t ANIM_LOOP_CW[][4] = {
   { SEG_F,    SEG_OFF,  SEG_OFF,  SEG_OFF },
 };
 
-void animateLoopClockwise(const TM1637Display *disp, const uint16_t timeMS, const uint8_t iterations);
+void animateLoopClockwise(const TM1637Display *disp, const uint16_t timeMS);
