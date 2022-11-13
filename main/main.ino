@@ -4,6 +4,7 @@
 #include <TM1637Display.h>
 #include "DisplayConstants.h"
 
+const uint8_t RELAY_PIN = 2;
 const uint8_t DISP_DIO_PIN = 4;
 const uint8_t DISP_PIN_CLK = 5;
 const uint8_t TEMP_PIN = 10;
@@ -12,6 +13,8 @@ const uint16_t DISP_INTERVAL_MS = 2000;
 const uint16_t FADE_IN_MS = 1000;
 const uint16_t FADE_OUT_MS = 500;
 const uint16_t ANIM_DELAY_MS = 2000;
+const int8_t TEMP_ON_C = -20;
+const int8_t TEMP_OFF_C = -15;
 const TM1637Display disp = TM1637Display(DISP_PIN_CLK, DISP_DIO_PIN);
 const DHT_Unified sensor(TEMP_PIN, DHT22);
 
@@ -19,7 +22,8 @@ uint16_t tempDelayMS = 30000;
 
 void setup() {
   Serial.begin(9600);
-  
+
+  pinMode(RELAY_PIN, OUTPUT);
   initSensor();
   initDisplay();
 }
@@ -47,6 +51,7 @@ void loop() {
   const int8_t tempC = readTemp();
   
   if (tempC != NULL) {
+    toggleRelay(tempC);
     displayTempC(tempC);
     displayTempF(tempC);
   }
@@ -71,6 +76,15 @@ int8_t readTemp() {
     else {
       return event.temperature;
     }
+}
+
+void toggleRelay(const int8_t tempC) {
+  if (tempC > TEMP_ON_C) {
+    digitalWrite(RELAY_PIN, HIGH);
+  }
+  else if (tempC <= TEMP_OFF_C) {
+    digitalWrite(RELAY_PIN, LOW);
+  }
 }
 
 void displayTempC(const int8_t tempC) {
