@@ -5,8 +5,8 @@
 #include "DisplayConstants.h"
 
 const uint8_t RELAY_PIN = 2;
-const uint8_t DISP_DIO_PIN = 4;
-const uint8_t DISP_PIN_CLK = 5;
+const uint8_t DISP_CLK_PIN = 4;
+const uint8_t DISP_DIO_PIN = 5;
 const uint8_t TEMP_PIN = 10;
 
 const uint16_t DISP_INTERVAL_MS = 2000;
@@ -15,7 +15,7 @@ const uint16_t FADE_OUT_MS = 500;
 const uint16_t ANIM_DELAY_MS = 2000;
 const int8_t TEMP_ON_C = -20;
 const int8_t TEMP_OFF_C = -15;
-const TM1637Display disp = TM1637Display(DISP_PIN_CLK, DISP_DIO_PIN);
+const TM1637Display disp = TM1637Display(DISP_CLK_PIN, DISP_DIO_PIN);
 const DHT_Unified sensor(TEMP_PIN, DHT22);
 
 uint16_t tempDelayMS = 30000;
