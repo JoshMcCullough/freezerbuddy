@@ -9,10 +9,12 @@ const uint8_t DISP_CLK_PIN = 4;
 const uint8_t DISP_DIO_PIN = 5;
 const uint8_t TEMP_PIN = 10;
 
+const uint16_t INIT_SENSOR_DELAY_MS = 5000;
 const uint16_t DISP_INTERVAL_MS = 2000;
 const uint16_t FADE_IN_MS = 1000;
 const uint16_t FADE_OUT_MS = 500;
 const uint16_t ANIM_DELAY_MS = 2000;
+const uint16_t ERR_DELAY_MS = 5000;
 const int8_t TEMP_ON_C = -20;
 const int8_t TEMP_OFF_C = -15;
 const TM1637Display disp = TM1637Display(DISP_CLK_PIN, DISP_DIO_PIN);
@@ -24,12 +26,14 @@ void setup() {
   Serial.begin(9600);
 
   pinMode(RELAY_PIN, OUTPUT);
-  initSensor();
+  pinMode(TEMP_PIN, INPUT);
+
   initDisplay();
+  initSensor();
 }
 
 void initSensor() {
-  const sensor_t sensorInfo;
+  const sensor_t sensorInfo {};
 
   sensor.begin();
   sensor.temperature().getSensor(&sensorInfo);
@@ -44,7 +48,7 @@ void initDisplay() {
   }
   
   disp.setBrightness(DISP_BRIGHT_MIN);
-  fadeIn(segments, 1000);
+  fadeIn(segments, INIT_SENSOR_DELAY_MS);
 }
 
 void loop() {
@@ -55,19 +59,32 @@ void loop() {
     displayTempC(tempC);
     displayTempF(tempC);
   }
+  else {
+    delay(ERR_DELAY_MS - ANIM_DELAY_MS);
+  }
 
   disp.setBrightness(DISP_BRIGHT_MIN);
-
+  
   for (uint8_t i = 0; i < tempDelayMS / ANIM_DELAY_MS; i++) {
     animateLoopClockwise(&disp, ANIM_DELAY_MS);
   }
 }
 
 int8_t readTemp() {
-    const sensors_event_t event;
+    const sensors_event_t event {};
   
     sensor.temperature().getEvent(&event);
-    
+    Serial.println(event.temperature);
+    Serial.println(event.pressure);
+    Serial.println(event.relative_humidity);
+    Serial.println(event.current);
+    Serial.println(event.voltage);
+    Serial.println(event.data[0]);
+    Serial.println(event.data[1]);
+    Serial.println(event.data[2]);
+    Serial.println(event.data[3]);
+    Serial.println(event.temperature);
+    Serial.println(event.temperature);
     if (isnan(event.temperature)) {
       displayError(2, "Failed to read temperature.");
       
@@ -144,8 +161,7 @@ void fadeOut(const uint8_t segments[], const uint16_t timeMS) {
 }
 
 void fade(const uint8_t segments[], const uint16_t timeMS, const bool in) {
-  const uint8_t levels = DISP_BRIGHT_MAX + 1;
-  const uint8_t interval = timeMS / levels;
+  const uint16_t interval = timeMS / (float)(DISP_BRIGHT_MAX + 1);
   const uint8_t fadeStart = in ? DISP_BRIGHT_MIN : DISP_BRIGHT_MAX;
   const uint8_t fadeEnd = in ? DISP_BRIGHT_MAX : DISP_BRIGHT_MIN;
   const uint8_t step = in ? 1 : -1;
